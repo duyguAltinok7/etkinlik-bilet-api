@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  
+}
+
+
+// =========================
+// USER
+// =========================
+
+enum role {
+  user
+  organizer
+  admin
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  name         String
+  email        String        @unique
+  password     String
+  role         role
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  reservations Reservation[]
+  refreshTokens RefreshToken[]
+}
+
+
+// =========================
+// VENUE
+// =========================
+
+model Venue {
+  id        Int      @id @default(autoincrement())
+  name      String
+  address   String
+  capacity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  seats     Seat[]
+  events    Event[]
+}
+
+
+// =========================
+// EVENT
+// =========================
+
+model Event {
+  id           Int           @id @default(autoincrement())
+  title        String
+  description  String
+  date         DateTime
+
+  venueId      Int
+
+  venue        Venue         @relation(fields: [venueId], references: [id])
+  reservations Reservation[]
+}
+
+
+// =========================
+// SEAT
+// =========================
+
+model Seat {
+  id           Int           @id @default(autoincrement())
+  venueId      Int
+  seatNumber   Int
+  row          Int
+  createdAt    DateTime      @default(now())
+
+  venue        Venue         @relation(fields: [venueId], references: [id])
+  reservations Reservation[]
+  @@unique([venueId,row,seatNumber])
+}
+
+
+// =========================
+// RESERVATION
+// =========================
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+//Bir koltuk sadece bir defa satılmamalı; aynı etkinlik için bir defa satılmalı.eventId + seatId  benzersiz yapacağız
+model Reservation {
+  id           Int               @id @default(autoincrement())
+  userId       Int
+  eventId      Int
+  seatId       Int
+  status       ReservationStatus
+  reservedAt   DateTime          @default(now())
+
+  user         User              @relation(fields: [userId], references: [id])
+  event        Event             @relation(fields: [eventId], references: [id])
+  seat         Seat              @relation(fields: [seatId], references: [id])
+
+  ticket       Ticket?
+  payment      Payment?
+
+  @@unique([eventId, seatId])
+}
+
+
+// =========================
+// TICKET
+// =========================
+
+enum TicketStatus {
+  ACTIVE
+  USED
+  CANCELLED
+}
+
+model Ticket {
+  id            Int           @id @default(autoincrement())
+  reservationId Int           @unique
+  ticketNumber  String        @unique
+  price         Float
+  status        TicketStatus
+  issuedAt      DateTime      @default(now())
+
+  reservation   Reservation   @relation(fields: [reservationId], references: [id])
+}
+
+
+// =========================
+// PAYMENT
+// =========================
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  BANK_TRANSFER
+  CASH
+}
+
+model Payment {
+  id            Int            @id @default(autoincrement())
+  reservationId Int            @unique
+  amount        Float
+  status        PaymentStatus
+  paymentMethod PaymentMethod
+  transactionId String         @unique
+  paidAt        DateTime?
+  createdAt     DateTime       @default(now())
+
+  reservation   Reservation    @relation(fields: [reservationId], references: [id])
+}
+
+model RefreshToken {
+  id        Int @id @default(autoincrement())
+  token     String @unique
+  userId    Int 
+  expiresAt DateTime
+  createdaT DateTime @default(now())
+  user      User  @relation(fields:[userId],references:[id],onDelete: Cascade)
+}
