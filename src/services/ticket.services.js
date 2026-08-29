@@ -23,13 +23,13 @@ const createTicket=async(ticketData)=>{
         throw new AppError("bu ıd ye ait rezervasyon bulunmamaktadır",404);
       
     }
-    const ticketNum=await repositories.fİndTicketNumber(ticketNumber);
+    const ticketNum=await repositories.findTicketNumber(ticketNumber);
     if(ticketNum){
         throw new AppError("bilet numarası uygun değil ",400);
         
     }
     if(price<=0){
-        throw new AppError("bilet fiyatı sıfrdan büyük olmalı",400);
+        throw new AppError("bilet fiyatı sıfırdan büyük olmalı",400);
     
     }
     if(status==='CANCELLED'){
@@ -56,7 +56,7 @@ const updateTicket=async(id,ticketData)=>{
 };
 
 const deleteTicket=async(id)=>{
-    const delTicket=await repositories.updateTicket(id);
+    const delTicket=await repositories.deleteTicket(id);
     if(!delTicket){
         throw new AppError("bilet bulunamadı",404);
         

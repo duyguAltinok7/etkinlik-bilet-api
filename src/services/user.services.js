@@ -1,5 +1,6 @@
 const repositories = require("../repositories/user.repositories");
 const AppError=require("../utils/AppError")
+const bcrypt=require("bcrypt");
 
 
 const getUserById = async (id) => {
@@ -35,7 +36,7 @@ const updateUser = async (id, userData) => {
             await repositories.findUserByEmail(userData.email);
 
         if (emailControl && emailControl.id !== id) {
-            throw new Apprror(
+            throw new AppError(
                 "Bu email başka bir kullanıcı tarafından kullanılıyor",409
             );
 
@@ -86,6 +87,7 @@ const changedPassword=async(id,oldPassword,newPassword)=>{
        
     }
     if(oldPassword===newPassword){
+        throw new AppError("Yeni şifre eski şifreyle aynı olamaz",400);
        
 
     }

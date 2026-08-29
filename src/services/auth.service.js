@@ -93,20 +93,22 @@ const authRefresh=async(token)=>{
 
     return {accessToken};
 };
+
 const authLogout = async (refreshToken) => {
-    const token = await repositories.findRefreshToken(refreshToken);
+    const token = await refreshTokenRepository.findByToken(refreshToken);
 
     if (!token) {
        throw new AppError("Geçersiz refresh token",401);
      
     }
 
-    await repositories.deleteRefreshToken(refreshToken);
+    await refreshTokenRepository.deleteByToken(refreshToken);
 
     return {
         message: "Başarıyla çıkış yapıldı"
     };
 };
+
 module.exports={
     authRegister,
     authLogin,
