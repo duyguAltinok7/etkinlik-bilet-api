@@ -1,10 +1,17 @@
-const { Prisma } = require("../generated/prisma/client");
 
+const { Prisma } = require("../generated/prisma/client");
+const logger = require("../utils/logger");
 
 const errorMiddleware = (err, req, res, next) => {
 
-    console.error(err);
-
+    logger.error("Application Error", {
+        requestId:req.requestId,
+        method: req.method,
+        url: req.originalUrl,
+        statusCode: err.statusCode || 500,
+        message: err.message,
+        stack: err.stack
+    });
 
     if (err instanceof Prisma.PrismaClientKnownRequestError) {
 
@@ -14,7 +21,6 @@ const errorMiddleware = (err, req, res, next) => {
             });
         }
 
-
         if (err.code === "P2025") {
             return res.status(404).json({
                 message: "İstenen kayıt bulunamadı"
@@ -22,14 +28,12 @@ const errorMiddleware = (err, req, res, next) => {
         }
     }
 
-
     const statusCode = err.statusCode || 500;
-
 
     res.status(statusCode).json({
         message: err.message || "Sunucu hatası"
     });
 };
 
-
 module.exports = errorMiddleware;
+

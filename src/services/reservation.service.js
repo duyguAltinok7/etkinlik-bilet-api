@@ -1,6 +1,7 @@
 
 const repositories = require("../repositories/reservation.repositories");
 const AppError=require("../utils/AppError")
+const prisma=require("../config/prisma.js");
 
 
 
@@ -61,6 +62,7 @@ const getReservationById = async (id, user) => {
 
 
 // REZERVASYON OLUŞTUR
+// burda amacımız :createReservation içindeki bütün DB işlemlerinin aynı tx üzerinden çalışması.
 
 
 const createReservation = async (reservationData) => {
@@ -71,78 +73,69 @@ const createReservation = async (reservationData) => {
         seatId
     } = reservationData;
 
+    return await prisma.$transaction(async (tx) => {
 
-    // Kullanıcı gerçekten var mı?
-    const user =
-        await repositories.findUserById(userId);
+        const user =
+            await repositories.findUserById(userId, tx);
 
-    if (!user) {
-
-        throw new AppError("Kullanıcı bulunamadı",404);
-        
-    }
+        if (!user) {
+            throw new AppError("Kullanıcı bulunamadı", 404);
+        }
 
 
-    // Event gerçekten var mı?
-    const event =
-        await repositories.findEventById(eventId);
+        const event =
+            await repositories.findEventById(eventId, tx);
 
-    if (!event) {
-
-        throw new AppError("Etkinlik bulunamadı",404);
-    
-    }
+        if (!event) {
+            throw new AppError("Etkinlik bulunamadı", 404);
+        }
 
 
-    // Seat gerçekten var mı?
-    const seat =
-        await repositories.findSeatById(seatId);
+        const seat =
+            await repositories.findSeatForUpdate(seatId, tx);
 
-    if (!seat) {
-
-        throw new AppError("Koltuk bulunamadı",404);
-        
-    }
+        if (!seat) {
+            throw new AppError("Koltuk bulunamadı", 404);
+        }
 
 
-    // Koltuk bu etkinliğe ait mi?
-    if (seat.venueId !== event.venueId) {
-
-        throw new AppError(
-            "Bu koltuk bu etkinliğin mekanına ait değil",400
-        );
-
-     
-    }
+        if (seat.venueId !== event.venueId) {
+            throw new AppError(
+                "Bu koltuk bu etkinliğin mekanına ait değil",
+                400
+            );
+        }
 
 
-    // Aynı etkinlik + aynı koltuk daha önce rezerve edilmiş mi?
-    const existingReservation =
-        await repositories.findReservationByEventAndSeat(
-            eventId,
-            seatId
-        );
+        const existingReservation =
+            await repositories.findActiveReservationByEventAndSeat(
+                eventId,
+                seatId,
+                tx
+            );
 
-    if (existingReservation) {
-
-        throw new AppError(
-            "Bu koltuk bu etkinlik için zaten rezerve edilmiş",409
-        );
-
-      
-    }
+        if (existingReservation) {
+            throw new AppError(
+                "Bu koltuk bu etkinlik için zaten rezerve edilmiş",
+                409
+            );
+        }
 
 
-    const newReservation =
-        await repositories.createReservation({
-            userId,
-            eventId,
-            seatId,
-            status: "PENDING"
-        });
+        const newReservation =
+            await repositories.createReservation(
+                {
+                    userId,
+                    eventId,
+                    seatId,
+                    status: "PENDING"
+                },
+                tx
+            );
 
 
-    return newReservation;
+        return newReservation;
+    });
 };
 
 

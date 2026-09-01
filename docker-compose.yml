@@ -1,0 +1,25 @@
+services:
+    api:
+      build: .
+      container_name: event-api
+      ports:
+        - "3000:3000"
+      environment:
+        DATABASE_URL: ${DATABASE_URL}
+        REDIS_URL: redis://redis:6379
+
+    redis:
+      image: redis:7
+      container_name: event-redis
+      ports:
+        - "6379:6379"
+    
+    postgres:
+      image: postgres:17
+      container_name: event-postgres
+      ports:
+        - "5432:5432"
+      environment:
+        POSTGRES_USER: ${DB_USER}
+        POSTGRES_PASSWORD: ${DB_PASSWORD}
+        POSTGRES_DB: ${DB_NAME}

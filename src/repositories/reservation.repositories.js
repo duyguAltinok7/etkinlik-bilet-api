@@ -56,10 +56,20 @@ const getReservationById = async (id) => {
 
     return reservation;
 };
+// bu koltuğun satırını kontrol ederken kilitle prismada bunun için tx.queryRaw kullanacağız
+const findSeatForUpdate=async(seatId,db=prisma)=>{
+    const seat= await db.$queryRaw`
+        SELECT *
+        FROM "Seat"
+        where id = ${seatId}
+        FOR UPDATE`
+    return seat[0]; // array olarak döner biz ilk satırı arıyoruz o yüzden sıfır 
+        
+}
 
-const findUserById = async (userId) => {
+const findUserById = async (userId,db=prisma) => {// db eğer bana başka bir database client verlimezse normal prismayı kullan
 
-    const user = await prisma.user.findUnique({
+    const user = await db.user.findUnique({
         where: {
             id: userId
         }
@@ -68,9 +78,9 @@ const findUserById = async (userId) => {
     return user;
 };
 
-const findEventById = async (eventId) => {
+const findEventById = async (eventId,db=prisma) => {
 
-    const event = await prisma.event.findUnique({
+    const event = await db.event.findUnique({
         where: {
             id: eventId
         }
@@ -79,9 +89,9 @@ const findEventById = async (eventId) => {
     return event;
 };
 
-const findSeatById = async (seatId) => {
+const findSeatById = async (seatId,db=prisma) => {
 
-    const seat = await prisma.seat.findUnique({
+    const seat = await db.seat.findUnique({
         where: {
             id: seatId
         }
@@ -90,13 +100,13 @@ const findSeatById = async (seatId) => {
     return seat;
 };
 
-const findReservationByEventAndSeat = async (eventId,seatId) => {
-
-    const reservation = await prisma.reservation.findUnique({
+const findActiveReservationByEventAndSeat = async (eventId, seatId, db = prisma) => {
+    const reservation = await db.reservation.findFirst({
         where: {
-            eventId_seatId: {
-                eventId,
-                seatId
+            eventId,
+            seatId,
+            status: {
+                not: "CANCELLED"
             }
         }
     });
@@ -104,9 +114,9 @@ const findReservationByEventAndSeat = async (eventId,seatId) => {
     return reservation;
 };
 
-const createReservation = async (reservationData) => {
+const createReservation = async (reservationData,db=prisma) => {
 
-    const reservation = await prisma.reservation.create({
+    const reservation = await db.reservation.create({
         data: reservationData
     });
 
@@ -143,11 +153,11 @@ module.exports = {
     getReservations,
     getReservationsByUserId,
     getReservationById,
-
+    findSeatForUpdate,
     findUserById,
     findEventById,
     findSeatById,
-    findReservationByEventAndSeat,
+    findActiveReservationByEventAndSeat,
 
     createReservation,
     cancelReservation,

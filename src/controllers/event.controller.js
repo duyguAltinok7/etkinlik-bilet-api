@@ -23,9 +23,17 @@ const getEventById=async(req,res,next)=>{
 }
 const createEvent=async(req,res,next)=>{
     try{
-        const {title,description,date}=req.body;
-        const eventData={title,description,date};
+        const {title,description,date,venueId}=req.body;
+
+        const eventData={
+            title,
+            description,
+            date,
+            venueId
+        };
+
         const newEvent=await services.createEvent(eventData);
+
         res.status(201).json(newEvent);
 
     }catch(err){

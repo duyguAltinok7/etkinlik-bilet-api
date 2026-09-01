@@ -1,10 +1,10 @@
+const AppError=require("../utils/AppError");
 const validationMiddleware=(schema)=>{
     return (req,res,next)=>{
         const {error}=schema.validate(req.body);
         if(error){
-            return res.status(400).json({
-                message:error.details[0].message
-            });
+           const message=error.details[0].message;
+           return next(new AppError(message,400));
         }
         next()
     }

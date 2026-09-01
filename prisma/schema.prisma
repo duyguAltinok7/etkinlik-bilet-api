@@ -9,9 +9,8 @@ datasource db {
 }
 
 
-// =========================
 // USER
-// =========================
+
 
 enum role {
   user
@@ -33,9 +32,9 @@ model User {
 }
 
 
-// =========================
+
 // VENUE
-// =========================
+
 
 model Venue {
   id        Int      @id @default(autoincrement())
@@ -50,9 +49,8 @@ model Venue {
 }
 
 
-// =========================
 // EVENT
-// =========================
+
 
 model Event {
   id           Int           @id @default(autoincrement())
@@ -67,9 +65,8 @@ model Event {
 }
 
 
-// =========================
 // SEAT
-// =========================
+
 
 model Seat {
   id           Int           @id @default(autoincrement())
@@ -84,9 +81,8 @@ model Seat {
 }
 
 
-// =========================
 // RESERVATION
-// =========================
+
 
 enum ReservationStatus {
   PENDING
@@ -109,13 +105,13 @@ model Reservation {
   ticket       Ticket?
   payment      Payment?
 
-  @@unique([eventId, seatId])
+
 }
 
 
-// =========================
+
 // TICKET
-// =========================
+
 
 enum TicketStatus {
   ACTIVE
@@ -135,9 +131,8 @@ model Ticket {
 }
 
 
-// =========================
 // PAYMENT
-// =========================
+
 
 enum PaymentStatus {
   PENDING
