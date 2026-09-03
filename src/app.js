@@ -11,7 +11,7 @@ const bookingRoutes = require("./routes/booking.routes");
 const loggerMiddleware = require("./middleware/logger.middleware");
 const eventRoutes = require("./routes/event.routes");
 const venueRoutes = require("./routes/venue.routes");
-
+const seatRoutes= require("./routes/seat.routes");
 app.use(loggerMiddleware);
 
 app.use(express.json());
@@ -19,6 +19,7 @@ app.use(express.json());
 app.use("/api/events", eventRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/venues", venueRoutes);
+app.use("/api/seats", seatRoutes);
 app.use("/api/reservations", reservationRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/auth", authRoutes);
