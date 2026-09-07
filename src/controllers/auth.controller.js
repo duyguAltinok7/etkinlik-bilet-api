@@ -23,6 +23,7 @@ const authLogin=async(req,res,next)=>{
     }
 }
 const authRefresh=async(req,res,next)=>{
+    //refreshToken'ı doğrulamak ve kullanmak için alıyor ,yeni access üretcez 
     try{
         const {refreshToken}=req.body;
         const result=await services.authRefresh(refreshToken);
@@ -33,8 +34,8 @@ const authRefresh=async(req,res,next)=>{
     }
 };
 
-const authLogout =async(req,res,next)=>{
-    try{
+const authLogout =async(req,res,next)=>{// burda refresh tokeni bulup siliyoruz amac bu access token ise  kısa süreli olduğu için silinmez genelde 
+    try{ 
         const {refreshToken}=req.body;
         await services.authLogout(refreshToken);
         res.status(204).send()

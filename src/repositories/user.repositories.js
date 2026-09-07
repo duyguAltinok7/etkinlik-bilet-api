@@ -53,29 +53,7 @@ const deleteUser = async (id) => {
 
     return user;
 };
-const changePassword = async (req, res, next) => {
-    try {
 
-        const id = req.user.id;
-
-        const {
-            oldPassword,
-            newPassword
-        } = req.body;
-
-        const result =
-            await services.changePassword(
-                id,
-                oldPassword,
-                newPassword
-            );
-
-        res.status(200).json(result);
-
-    } catch (err) {
-        next(err);
-    }
-};
 
 
 module.exports = {
@@ -83,6 +61,6 @@ module.exports = {
     findUserById,
     createUser,
     updateUser,
-    deleteUser,
-    changePassword
+    deleteUser
+    
 };

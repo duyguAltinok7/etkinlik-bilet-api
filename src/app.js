@@ -26,4 +26,6 @@ app.use("/api/auth", authRoutes);
 
 app.use(errorMiddleware);
 
+
+
 module.exports = app;

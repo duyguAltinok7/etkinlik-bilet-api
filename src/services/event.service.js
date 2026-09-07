@@ -1,62 +1,61 @@
-const repositories=require("../repositories/event.repositories");
-const AppError=require("../utils/AppError");
-const logger=require("../utils/logger.js");
-const redisClient=require("../config/redis.js");
+const repositories = require("../repositories/event.repositories");
+const AppError = require("../utils/AppError");
+const logger = require("../utils/logger.js");
+const redisClient = require("../config/redis.js");
 
-const getEvents=async()=>{
-    const cachedEvents=await redisClient.get("events");// cachedevents var mı > evetse redisten alacağız yoksa postgresql e gideceğiz
-    if(cachedEvents){
+const getEvents = async () => {
+    const cachedEvents = await redisClient.get("events"); // cachedevents var mı > evetse redisten alacağız yoksa postgresql e gideceğiz
+    if (cachedEvents) {
         logger.info("events redis cache den getirildi");
         return JSON.parse(cachedEvents);
-
     }
-    const events=await repositories.getEvents();
-    
-    if(!events){
-        throw new AppError("event bulunamadı",404);
-     
+    const events = await repositories.getEvents();
+
+    if (!events) {
+        logger.warn("events bulunamadı");
+        throw new AppError("event bulunamadı", 404);
     }
     await redisClient.set(
         "events",
         JSON.stringify(events),
         {
-            EX:60
+            EX: 60
         }
     )
     logger.info("Events başarıyla getirildi")
     return events;
-    
+
 }
-const getEventById=async(id)=>{
+const getEventById = async (id) => {
     // burda redis mantığımız sürekli aynı id istenirse redisten alacağız 
-    const cacheKey=`event:${id}`;
-    const cachedEvent=await redisClient.get(cacheKey);
-    if(cachedEvent){
-        if(cachedEvent==="NOT_FOUND"){
+    const cacheKey = `event:${id}`;
+    const cachedEvent = await redisClient.get(cacheKey);
+    if (cachedEvent) {
+        if (cachedEvent === "NOT_FOUND") {
             logger.info("event redis cache de bulunamadı olarak işaretlenmiş");
-            throw new AppError("event bulunamadı",404);
+            throw new AppError("event bulunamadı", 404);
         }
         logger.info("event redis cacheden getirildi");
         return JSON.parse(cachedEvent);
     }
-    const event=await repositories.getEventById(id);
-    if(!event){
+    const event = await repositories.getEventById(id);
+    if (!event) {
         await redisClient.set(
             cacheKey,
             "NOT_FOUND",
             {
-                EX:30
+                EX: 30
             }
         );
-        logger.error("event bulunamadı")
-        throw new AppError("event bulunamadı",404);
-       
+        logger.warn("event bulunamadı", { eventId: id });
+        throw new AppError("event bulunamadı", 404);
+
     }
     await redisClient.set(
         cacheKey,
         JSON.stringify(event),
         {
-            EX:60
+            EX: 60
         }
     )
     return event;
@@ -73,7 +72,7 @@ const createEvent = async (eventData) => {
             }
         }
     });
-    await redisClient.del("events");// redisteki eski cachi siliyoruz
+    await redisClient.del("events"); // redisteki eski cachi siliyoruz
 
     logger.info("event başarıyla oluştu", {
         eventId: newEvent.id,
@@ -82,36 +81,36 @@ const createEvent = async (eventData) => {
 
     return newEvent;
 };
-const updateEvent=async(id,eventData)=>{
-    
-    const newUpdateEvent=await repositories.updateEvent(id,eventData);
-    
-    if(!newUpdateEvent){
-        logger.error("event bulunamadı")
-        throw new AppError("event bulunamadı",404);
-    
-       
+const updateEvent = async (id, eventData) => {
+
+    const newUpdateEvent = await repositories.updateEvent(id, eventData);
+
+    if (!newUpdateEvent) {
+        logger.warn("event bulunamadı", { eventId: id });
+        throw new AppError("event bulunamadı", 404);
+
+
     }
-    // güncellemebaşarılı olduktan sonra redisi silecez 
+    // güncelleme başarılı olduktan sonra redisi silecez 
     await redisClient.del("events");
     // event id içinde yapmalıyız
     await redisClient.del(`event:${id}`);
     return newUpdateEvent;
 }
 
-const deleteEvent=async(id)=>{
-    const delEvent=await repositories.deleteEvent(id);
-    if(!delEvent){
-        logger.error("event bulunamadı")
-        throw new AppError("event bulunamadı",404);
-        
+const deleteEvent = async (id) => {
+    const delEvent = await repositories.deleteEvent(id);
+    if (!delEvent) {
+        logger.warn("event bulunamadı", { eventId: id });
+        throw new AppError("event bulunamadı", 404);
+
     }
     await redisClient.del("events");
     await redisClient.del(`event:${id}`);
     return delEvent;
 };
 
-module.exports={
+module.exports = {
     getEvents,
     getEventById,
     createEvent,
